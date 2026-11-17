@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Audit Énergie</title>
+<style>
+:root{--bg:#f3f6f5;--card:#fff;--tx:#14201d;--mut:#5b6b66;--pri:#0f766e;--onpri:#fff;--bd:#dce5e2;--bad:#b91c1c;--ok:#15803d;--warn:#b45309}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1513;--card:#17211e;--tx:#e8f0ed;--mut:#94a8a1;--pri:#2dd4bf;--onpri:#06201c;--bd:#263631;--bad:#f87171;--ok:#4ade80;--warn:#fbbf24}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+#app{max-width:820px;margin:0 auto;min-height:100vh;padding-bottom:90px}
+header.top{position:sticky;top:0;z-index:10;background:var(--pri);color:var(--onpri);padding:calc(10px + env(safe-area-inset-top)) 12px 10px;display:flex;align-items:center;gap:10px}
+header.top h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header.top button{background:transparent;border:0;color:inherit;font-size:22px;padding:6px 10px;cursor:pointer}
+.tabs{position:sticky;top:calc(52px + env(safe-area-inset-top));z-index:9;display:flex;overflow-x:auto;background:var(--card);border-bottom:1px solid var(--bd);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;border:0;background:none;color:var(--mut);padding:12px 14px;font-size:14px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--pri);border-color:var(--pri);font-weight:600}
+.tabs .cnt{background:var(--bd);color:var(--tx);border-radius:9px;font-size:11px;padding:1px 6px;margin-left:4px}
+main{padding:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px}
+.card.tap{cursor:pointer}
+.card h3{margin:0 0 2px;font-size:16px}
+.card .sub{color:var(--mut);font-size:13px}
+.card .val{color:var(--pri);font-size:13px;margin-top:4px;font-weight:600}
+.card .badge{float:right;font-size:12px;color:var(--mut)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--pri);background:var(--pri);color:var(--onpri);padding:11px 16px;border-radius:10px;font-size:15px;cursor:pointer;font-weight:600}
+.btn.sec{background:transparent;color:var(--pri)}
+.btn.bad{background:transparent;color:var(--bad);border-color:var(--bad)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:20;box-shadow:0 4px 14px #0004;border-radius:28px;padding:14px 20px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fld{display:flex;flex-direction:column;gap:3px;grid-column:span 2}
+.fld.half{grid-column:span 1}
+.fld>span{font-size:12px;color:var(--mut)}
+.fld input,.fld select,.fld textarea{width:100%;font:inherit;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx)}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--pri)}
+.fld.chk{flex-direction:row;align-items:center;gap:8px}
+.fld.chk input{width:22px;height:22px}
+.mic{position:relative}
+.mic button{position:absolute;right:6px;bottom:6px;border:0;background:var(--bd);border-radius:6px;font-size:16px;padding:4px 8px}
+.calc{background:color-mix(in srgb,var(--pri) 12%,transparent);color:var(--pri);padding:10px 12px;border-radius:10px;font-weight:600;margin:10px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.grid img,.thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:block;background:var(--bd);cursor:pointer}
+.tagpill{display:inline-block;font-size:12px;background:var(--bd);border-radius:12px;padding:3px 10px;margin:0 6px 6px 0;cursor:pointer}
+.tagpill.on{background:var(--pri);color:var(--onpri)}
+h2.sec{font-size:15px;margin:18px 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi div{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px}
+.kpi b{display:block;font-size:20px;color:var(--pri)}
+.kpi small{color:var(--mut)}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t td,table.t th{padding:6px 4px;border-bottom:1px solid var(--bd);text-align:left}
+table.t td.r,table.t th.r{text-align:right}
+.ov{position:fixed;inset:0;background:#000d;z-index:50;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.ov .bar{display:flex;gap:6px;flex-wrap:wrap;padding:8px;background:#111;align-items:center}
+.ov .bar button,.ov .bar select{background:#333;color:#fff;border:0;border-radius:8px;padding:9px 12px;font-size:15px}
+.ov .bar button.on{background:var(--pri);color:var(--onpri)}
+.ov .stage{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:6px;min-height:0}
+.ov canvas,.ov img.big{max-width:100%;max-height:100%;touch-action:none;background:#fff}
+.ov .meta{background:#111;padding:8px;display:flex;flex-direction:column;gap:6px}
+.ov .meta input,.ov .meta select{padding:10px;border-radius:8px;border:0;font:inherit}
+.dot{width:28px;height:28px;border-radius:50%;border:3px solid #333;padding:0!important}
+.dot.on{border-color:#fff}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#111;color:#fff;padding:10px 16px;border-radius:20px;z-index:99;font-size:14px}
+.chk-l{display:flex;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--bd)}
+.chk-l input{width:22px;height:22px}
+.empty{text-align:center;color:var(--mut);padding:30px 10px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+/* ---------- utilitaires ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+function h(t,a,...k){const e=document.createElement(t);for(const[n,v]of Object.entries(a||{})){if(n==='class')e.className=v;else if(n.startsWith('on'))e.addEventListener(n.slice(2),v);else if(v!==false&&v!=null)e.setAttribute(n,v===true?'':v)}for(const c of k.flat(9)){if(c==null||c===false)continue;e.append(c.nodeType?c:document.createTextNode(c))}return e}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const n=v=>{const x=parseFloat(String(v==null?'':v).replace(',','.'));return isNaN(x)?0:x};
+const f1=(x,d=2)=>Number(x).toLocaleString('fr-FR',{maximumFractionDigits:d});
+const r2=x=>Math.round(x*100)/100;
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){const t=h('div',{class:'toast'},m);document.body.append(t);setTimeout(()=>t.remove(),2200)}
+const b2d=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
+function dl(name,blob){const a=h('a',{href:URL.createObjectURL(blob),download:name});document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+
+/* ---------- base de données locale (IndexedDB) ---------- */
+const DB=(()=>{let db;
+ const open=()=>new Promise((res,rej)=>{const r=indexedDB.open('audit-energie',1);
+  r.onupgradeneeded=e=>{const d=e.target.result;d.createObjectStore('audits',{keyPath:'id'});d.createObjectStore('photos',{keyPath:'id'}).createIndex('audit','auditId')};
+  r.onsuccess=()=>{db=r.result;res()};r.onerror=()=>rej(r.error)});
+ const tx=(st,mode,fn)=>new Promise((res,rej)=>{const t=db.transaction(st,mode);const r=fn(t.objectStore(st));t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)});
+ return{open,put:(s,v)=>tx(s,'readwrite',o=>o.put(v)),get:(s,k)=>tx(s,'readonly',o=>o.get(k)),all:s=>tx(s,'readonly',o=>o.getAll()),del:(s,k)=>tx(s,'readwrite',o=>o.delete(k)),photosOf:id=>tx('photos','readonly',o=>o.index('audit').getAll(id))}})();
+
+/* ---------- état ---------- */
+let S={v:'home',tab:'info',sec:null,item:null};
+let audit=null,photos=[];
+const urls=new Map();
+const urlOf=p=>{let u=urls.get(p.id);if(!u||u.b!==p.blob){if(u)URL.revokeObjectURL(u.u);u={u:URL.createObjectURL(p.blob),b:p.blob};urls.set(p.id,u)}return u.u};
+let pt;function persist(){clearTimeout(pt);pt=setTimeout(flush,250)}
+async function flush(){clearTimeout(pt);if(audit){audit.updated=Date.now();await DB.put('audits',audit)}}
+addEventListener('pagehide',flush);document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});
+function nav(p,replace){S={...S,...p};history[replace?'replaceState':'pushState']({S},'');render();scrollTo(0,0)}
+addEventListener('popstate',e=>{S=(e.state&&e.state.S)||{v:'home'};if(S.v!=='home'&&!audit)S={v:'home'};render()});
+
+/* ---------- listes d'options ---------- */
+const O={
+ niveau:['Sous-sol','RDC','R+1','R+2','R+3','Combles','Toiture-terrasse','Autre'],
+ usage:['Bureau','Salle de classe','Restauration','Circulation','Sanitaires','Salle polyvalente','Sport','Stockage','Local technique','Accueil / public','Logement','Autre'],
+ orient:['N','NE','E','SE','S','SO','O','NO','Horizontal'],
+ envType:['Mur extérieur','Toiture / rampant','Toiture-terrasse','Combles perdus','Plancher bas (sur terre-plein)','Plancher bas (sur vide sanitaire / sous-sol)','Plancher intermédiaire','Mur sur local non chauffé','Fenêtre','Porte-fenêtre','Porte','Lanterneau / Velux','Façade rideau'],
+ vitr:['Simple vitrage','Double vitrage ancien (avant 2000)','Double vitrage faible émissif','Triple vitrage','Polycarbonate','Brique de verre'],
+ menu:['PVC','Alu sans rupture de pont thermique','Alu avec RPT','Bois','Mixte bois-alu','Acier'],
+ occ:['Aucune','Volets roulants','Volets battants','Stores extérieurs','Brise-soleil orientables','Stores intérieurs','Films solaires'],
+ mat:['Béton','Pierre','Brique pleine','Brique creuse','Parpaing','Bois','Métal','Terre cuite / tuiles','Bac acier / zinc','Ardoise','Terre / pisé','Autre'],
+ iso:['Aucune','Inconnu','Laine minérale','Polystyrène (PSE/XPS)','PU / PIR','Fibre de bois','Ouate de cellulose','Liège','Autre'],
+ isoPos:['ITI (intérieur)','ITE (extérieur)','Répartie (mur à isolation intégrée)','Rampants','Combles perdus (soufflé)','Sous dalle / plancher','Autre'],
+ etat:['Bon','Moyen','Mauvais','À remplacer'],
+ energie:['Électricité','Gaz naturel','Propane / butane','Fioul','Bois bûche','Granulés / plaquettes','Réseau de chaleur','Solaire','Autre'],
+ sysCat:['Chauffage – production','Chauffage – émission','Régulation / programmation','ECS (eau chaude sanitaire)','Ventilation','Climatisation / froid','Éclairage','Équipements / process','Production EnR','GTB / comptage','Autre'],
+ lampe:['LED','Fluo T8','Fluo T5','Fluo compacte','Halogène','Incandescence','Iodure métallique','Sodium','Autre'],
+ unite:['kWh','MWh','m³ gaz','L fioul','kg granulés','stère bois','kg propane'],
+ grandeur:['Température ambiante','Humidité relative','CO₂','Éclairement','Puissance électrique','Débit d\'air','T° départ chauffage','T° retour chauffage','T° de surface','Bruit'],
+ metCat:['Murs','Toiture','Plancher','Menuiseries','Isolation','Chauffage','Éclairage','Ventilation','Électricité','Autre'],
+ obsType:['Humidité / condensation','Moisissures','Pont thermique','Infiltration d\'air','Fissures / désordres','Défaut d\'isolation','Inconfort (chaud / froid)','Défaut de régulation','Équipement vétuste','Sécurité / réglementaire','Bonne pratique à conserver','Autre'],
+ grav:['Faible','Moyenne','Forte'],
+ recoCat:['Enveloppe','Chauffage','ECS','Ventilation','Éclairage','Régulation / GTB','EnR','Exploitation / comportement','Autre'],
+ prio:['1 – Immédiat (< 2 ans)','2 – Court terme (2-5 ans)','3 – Moyen terme (5-10 ans)','4 – Long terme'],
+ bat:['Mairie','École','Crèche','Salle polyvalente / des fêtes','Équipement sportif','Culture / médiathèque','Bureaux','Atelier / service technique','Patrimoine / église','Logement collectif','Maison individuelle','Commerce','Autre'],
+ zc:['H1a','H1b','H1c','H2a','H2b','H2c','H2d','H3']
+};
+const COEF={'kWh':1,'MWh':1000,'m³ gaz':10.9,'L fioul':9.96,'kg granulés':4.8,'stère bois':1700,'kg propane':12.8};
+const GUNIT={'Température ambiante':'°C','Humidité relative':'%','CO₂':'ppm','Éclairement':'lux','Puissance électrique':'W','Débit d\'air':'m³/h','T° départ chauffage':'°C','T° retour chauffage':'°C','T° de surface':'°C','Bruit':'dB(A)'};
+const TAGS=['Façade','Toiture','Intérieur','Menuiserie','Chaufferie','Plaque signalétique','Compteur','Éclairage','Ventilation','Pathologie','Thermographie','Croquis','Autre'];
+const FICHES=['BAT-EN-101','BAT-EN-102','BAT-EN-103','BAT-EN-104','BAT-EQ-127','BAT-TH-102','BAT-TH-116'];
+const CHECK=['Plans / DOE récupérés','Factures énergie (3 dernières années)','Contrats énergie (tarif, puissance souscrite)','Carnet d\'entretien chaufferie / contrats maintenance','Anciens diagnostics (DPE, audit, étude)','Relevé des compteurs (index) et n° PDL / PCE','Photos des 4 façades + toiture','Photos chaufferie + plaques signalétiques','Photos de chaque type de menuiserie','Éclairage : types et quantités relevés','Ventilation (VMC / CTA) relevée','Régulation et programmation relevées','Entretien avec l\'exploitant / occupants (confort, plaintes)','Horaires et scénarios d\'occupation notés','Mesures in situ (T°, CO₂, lux…) faites','Visite des combles / sous-sol / locaux techniques'];
+const zoneName=id=>{const z=audit&&audit.zones.find(x=>x.id===id);return z?(z.nom||'Zone'):''};
+
+/* ---------- définition des sections ---------- */
+const SEC={};
+SEC.zones={label:'Zones',ico:'🚪',one:'Zone',
+ fields:[{k:'nom',l:'Nom de la zone / pièce',t:'text'},{k:'niveau',l:'Niveau',t:'sel',o:O.niveau,w:'half'},{k:'usage',l:'Usage',t:'sel',o:O.usage,w:'half'},
+  {k:'L',l:'Longueur',t:'num',u:'m',w:'half'},{k:'l',l:'Largeur',t:'num',u:'m',w:'half'},{k:'h',l:'Hauteur sous plafond',t:'num',u:'m',w:'half'},{k:'surface',l:'Surface (si ≠ L×l)',t:'num',u:'m²',w:'half'},
+  {k:'occ',l:'Occupants',t:'num',w:'half'},{k:'cons',l:'T° de consigne',t:'num',u:'°C',w:'half'},{k:'orient',l:'Orientation principale',t:'sel',o:O.orient,w:'half'},{k:'hor',l:'Horaires d\'occupation',t:'text',w:'half'},{k:'notes',l:'Notes',t:'area'}],
+ title:z=>z.nom||'Zone sans nom',sub:z=>[z.niveau,z.usage].filter(Boolean).join(' · '),
+ calc:z=>{const s=n(z.surface)||n(z.L)*n(z.l);return{surf:s,vol:s*n(z.h)}},
+ txt:z=>{const c=SEC.zones.calc(z);return c.surf?`${f1(c.surf)} m²`+(c.vol?` · ${f1(c.vol)} m³`:''):''},
+ cols:[['Surface (m²)',z=>r2(SEC.zones.calc(z).surf)],['Volume (m³)',z=>r2(SEC.zones.calc(z).vol)]]};
+const isMenu=e=>['Fenêtre','Porte-fenêtre','Porte','Lanterneau / Velux','Façade rideau'].includes(e.type);
+SEC.env={label:'Enveloppe',ico:'🧱',one:'Paroi',
+ fields:[{k:'type',l:'Type de paroi',t:'sel',o:O.envType,onchg:()=>true},{k:'zone',l:'Zone / pièce',t:'zone'},{k:'orient',l:'Orientation',t:'sel',o:O.orient,w:'half'},
+  {k:'L',l:'Longueur / largeur',t:'num',u:'m',w:'half'},{k:'H',l:'Hauteur',t:'num',u:'m',w:'half'},{k:'nb',l:'Quantité',t:'num',w:'half'},{k:'ded',l:'Ouvertures à déduire',t:'num',u:'m²',w:'half',show:e=>!isMenu(e)},
+  {k:'mat',l:'Matériau / structure',t:'sel',o:O.mat,show:e=>!isMenu(e)},{k:'ep',l:'Épaisseur paroi',t:'num',u:'cm',w:'half',show:e=>!isMenu(e)},
+  {k:'iso',l:'Isolant',t:'sel',o:O.iso,w:'half',show:e=>!isMenu(e)},{k:'isoEp',l:'Épaisseur isolant',t:'num',u:'cm',w:'half',show:e=>!isMenu(e)},{k:'isoPos',l:'Position de l\'isolation',t:'sel',o:O.isoPos,show:e=>!isMenu(e)},
+  {k:'vitr',l:'Vitrage',t:'sel',o:O.vitr,show:isMenu},{k:'menu',l:'Menuiserie (cadre)',t:'sel',o:O.menu,show:isMenu},{k:'occ',l:'Occultation / protection solaire',t:'sel',o:O.occ,show:isMenu},
+  {k:'u',l:'U connu / estimé',t:'num',u:'W/m²K',w:'half'},{k:'annee',l:'Année pose / construction',t:'num',w:'half'},{k:'etat',l:'État',t:'sel',o:O.etat},{k:'notes',l:'Notes (étanchéité, joints, défauts…)',t:'area'}],
+ title:e=>e.type||'Paroi',sub:e=>[zoneName(e.zone),e.orient,isMenu(e)?e.vitr:e.iso&&e.iso!=='Aucune'?`${e.iso} ${e.isoEp||''}${e.isoEp?' cm':''}`:e.iso].filter(Boolean).join(' · '),
+ calc:e=>({surf:Math.max(0,n(e.L)*n(e.H)*(n(e.nb)||1)-n(e.ded))}),
+ txt:e=>{const s=SEC.env.calc(e).surf;return s?`${f1(s)} m² net`:''},cols:[['Surface nette (m²)',e=>r2(SEC.env.calc(e).surf)]]};
+const isEcl=s=>s.cat==='Éclairage';
+SEC.sys={label:'Systèmes',ico:'🔥',one:'Équipement',
+ fields:[{k:'cat',l:'Catégorie',t:'sel',o:O.sysCat,onchg:()=>true},{k:'des',l:'Désignation (ex. chaudière gaz, CTA, PAC…)',t:'text'},{k:'energie',l:'Énergie',t:'sel',o:O.energie,w:'half'},{k:'zone',l:'Zone desservie',t:'zone',w:'half'},
+  {k:'marque',l:'Marque',t:'text',w:'half'},{k:'modele',l:'Modèle / n° de série',t:'text',w:'half'},{k:'puis',l:'Puissance',t:'num',u:'kW',w:'half',show:s=>!isEcl(s)},{k:'rend',l:'Rendement / COP / SCOP',t:'num',w:'half',show:s=>!isEcl(s)},
+  {k:'lampe',l:'Type de lampe / luminaire',t:'sel',o:O.lampe,show:isEcl},{k:'qte',l:'Quantité',t:'num',w:'half'},{k:'pu',l:'Puissance unitaire',t:'num',u:'W',w:'half',show:isEcl},{k:'heures',l:'Heures de fonctionnement',t:'num',u:'h/an',w:'half',show:isEcl},
+  {k:'annee',l:'Année d\'installation',t:'num',w:'half'},{k:'etat',l:'État',t:'sel',o:O.etat,w:'half'},{k:'entretien',l:'Dernier entretien',t:'date',w:'half'},{k:'regul',l:'Régulation / programmation',t:'text'},{k:'notes',l:'Notes',t:'area'}],
+ title:s=>s.des||s.cat||'Équipement',sub:s=>[s.cat,s.energie,zoneName(s.zone)].filter(Boolean).join(' · '),
+ calc:s=>{if(isEcl(s)){const kw=n(s.qte)*n(s.pu)/1000;return{kw,kwh:kw*n(s.heures)}}return{kw:n(s.puis)*(n(s.qte)||1),kwh:0}},
+ txt:s=>{const c=SEC.sys.calc(s);return isEcl(s)?(c.kw?`${f1(c.kw)} kW installés`+(c.kwh?` · ≈ ${f1(c.kwh,0)} kWh/an`:''):''):(c.kw?`${f1(c.kw)} kW`:'')},
+ cols:[['Puissance totale (kW)',s=>r2(SEC.sys.calc(s).kw)],['Conso éclairage estimée (kWh/an)',s=>r2(SEC.sys.calc(s).kwh)]]};
+const consoQ=c=>n(c.qte)||Math.max(0,n(c.iF)-n(c.iD));
+SEC.conso={label:'Conso',ico:'⚡',one:'Relevé',
+ fields:[{k:'energie',l:'Énergie',t:'sel',o:O.energie},{k:'cpt',l:'Compteur / PDL / PCE',t:'text'},{k:'debut',l:'Début de période',t:'date',w:'half'},{k:'fin',l:'Fin de période',t:'date',w:'half'},
+  {k:'unite',l:'Unité du relevé',t:'sel',o:O.unite,onchg:c=>{c.coef=String(COEF[c.unite]||1);return true}},{k:'coef',l:'Coefficient de conversion',t:'num',u:'kWh/unité',w:'half'},
+  {k:'iD',l:'Index début',t:'num',w:'half'},{k:'iF',l:'Index fin',t:'num',w:'half'},{k:'qte',l:'ou quantité directe (facture)',t:'num',w:'half'},{k:'cout',l:'Coût TTC',t:'num',u:'€',w:'half'},{k:'notes',l:'Notes',t:'area'}],
+ title:c=>`${c.energie||'Relevé'}${c.debut?' – '+c.debut:''}`,sub:c=>[c.debut&&c.fin?`${c.debut} → ${c.fin}`:'',c.cpt].filter(Boolean).join(' · '),
+ calc:c=>{const kwh=consoQ(c)*(n(c.coef)||1);return{kwh,cout:n(c.cout)}},
+ txt:c=>{const k=SEC.conso.calc(c);return k.kwh?`${f1(k.kwh,0)} kWh`+(k.cout?` · ${f1(k.cout,0)} € · ${f1(k.cout/k.kwh,3)} €/kWh`:''):''},
+ cols:[['kWh',c=>r2(SEC.conso.calc(c).kwh)]]};
+SEC.mes={label:'Mesures',ico:'🌡️',one:'Mesure',
+ fields:[{k:'g',l:'Grandeur mesurée',t:'sel',o:O.grandeur,onchg:m=>{m.unit=GUNIT[m.g]||'';return true}},{k:'zone',l:'Zone / pièce',t:'zone'},{k:'val',l:'Valeur',t:'num',u:'',w:'half'},{k:'unit',l:'Unité',t:'text',w:'half'},{k:'app',l:'Appareil utilisé',t:'text'},{k:'notes',l:'Conditions / notes',t:'area'}],
+ title:m=>m.g||'Mesure',sub:m=>[zoneName(m.zone),new Date(m.created).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})].join(' · '),
+ calc:()=>({}),txt:m=>m.val?`${m.val} ${m.unit||''}`:'',cols:[]};
+const qMet=m=>{const q=n(m.nb)||1;const u=m.u||'m²';let v=u==='u'?q:u==='m'?q*n(m.L):u==='m²'?q*n(m.L)*n(m.l):q*n(m.L)*n(m.l)*n(m.h);return m.ded?-v:v};
+SEC.met={label:'Métrés',ico:'📐',one:'Ligne de métré',
+ fields:[{k:'lib',l:'Désignation',t:'text'},{k:'cat',l:'Catégorie',t:'sel',o:O.metCat,w:'half'},{k:'zone',l:'Zone',t:'zone',w:'half'},{k:'u',l:'Type de quantité',t:'sel',o:['m','m²','m³','u'],w:'half'},{k:'nb',l:'Nombre',t:'num',w:'half'},
+  {k:'L',l:'Longueur',t:'num',u:'m',w:'half'},{k:'l',l:'Largeur',t:'num',u:'m',w:'half'},{k:'h',l:'Hauteur / épaisseur',t:'num',u:'m',w:'half'},{k:'ded',l:'Déduction (quantité négative)',t:'chk'},{k:'notes',l:'Notes',t:'area'}],
+ title:m=>m.lib||m.cat||'Ligne',sub:m=>[m.cat,zoneName(m.zone)].filter(Boolean).join(' · '),
+ calc:m=>({q:qMet(m)}),txt:m=>{const q=qMet(m);return q?`${f1(q)} ${m.u||'m²'}`:''},cols:[['Quantité',m=>r2(qMet(m))]]};
+SEC.obs={label:'Obs.',ico:'⚠️',one:'Observation',
+ fields:[{k:'type',l:'Type',t:'sel',o:O.obsType},{k:'zone',l:'Localisation',t:'zone',w:'half'},{k:'grav',l:'Gravité',t:'sel',o:O.grav,w:'half'},{k:'desc',l:'Description',t:'area'},{k:'cause',l:'Cause probable',t:'area'}],
+ title:o=>o.type||'Observation',sub:o=>[zoneName(o.zone),o.grav].filter(Boolean).join(' · '),calc:()=>({}),txt:()=>'',cols:[]};
+const recoC=r=>{const eco=n(r.gain)*n(r.prix),reste=n(r.cout)-n(r.aides);return{eco,reste,tri:eco>0?reste/eco:0}};
+SEC.reco={label:'Recos',ico:'✅',one:'Préconisation',
+ fields:[{k:'titre',l:'Intitulé',t:'text'},{k:'cat',l:'Catégorie',t:'sel',o:O.recoCat,w:'half'},{k:'prio',l:'Priorité',t:'sel',o:O.prio,w:'half'},{k:'energie',l:'Énergie concernée',t:'sel',o:O.energie},
+  {k:'gain',l:'Gain estimé',t:'num',u:'kWh/an',w:'half'},{k:'prix',l:'Prix de l\'énergie',t:'num',u:'€/kWh',w:'half'},{k:'cout',l:'Coût des travaux HT',t:'num',u:'€',w:'half'},{k:'aides',l:'Aides (CEE, subventions…)',t:'num',u:'€',w:'half'},
+  {k:'cee',l:'Fiche CEE (à vérifier)',t:'text',list:'fiches'},{k:'desc',l:'Description / hypothèses',t:'area'}],
+ title:r=>r.titre||'Préconisation',sub:r=>[r.cat,r.prio].filter(Boolean).join(' · '),calc:recoC,
+ txt:r=>{const c=recoC(r);return c.eco?`${f1(c.eco,0)} €/an économisés`+(c.tri?` · TRI ${f1(c.tri,1)} ans`:''):''},
+ cols:[['Économie (€/an)',r=>r2(recoC(r).eco)],['Reste à charge (€)',r=>r2(recoC(r).reste)],['TRI (ans)',r=>r2(recoC(r).tri)]]};
+const ORDER=['zones','env','sys','conso','mes','met','obs','reco'];
+const INFO=[{k:'nom',l:'Nom du bâtiment / projet',t:'text'},{k:'commune',l:'Commune',t:'text'},{k:'adresse',l:'Adresse',t:'text'},{k:'type',l:'Type de bâtiment',t:'sel',o:O.bat},
+ {k:'annee',l:'Année de construction',t:'num',w:'half'},{k:'renov',l:'Dernière rénovation',t:'num',w:'half'},{k:'surf',l:'Surface utile / SDP',t:'num',u:'m²',w:'half'},{k:'niv',l:'Nb de niveaux',t:'num',w:'half'},
+ {k:'zc',l:'Zone climatique',t:'sel',o:O.zc,w:'half'},{k:'alt',l:'Altitude',t:'num',u:'m',w:'half'},{k:'date',l:'Date de la visite',t:'date',w:'half'},{k:'aud',l:'Auditeur',t:'text',w:'half'},
+ {k:'contact',l:'Contact sur site (nom, tél.)',t:'text'},{k:'prop',l:'Propriétaire / gestionnaire',t:'text'},{k:'occ',l:'Occupants / usagers',t:'num',w:'half'},{k:'hor',l:'Horaires & jours d\'occupation',t:'text',w:'half'},
+ {k:'lat',l:'Latitude',t:'text',w:'half'},{k:'lon',l:'Longitude',t:'text',w:'half'},{k:'notes',l:'Notes générales',t:'area'}];
+
+/* ---------- champs de formulaire ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function fieldEl(d,obj,onchg){
+ const v=obj[d.k];let inp;const cls='fld'+(d.w?' '+d.w:'')+(d.t==='chk'?' chk':'');
+ const done=()=>{persist();onchg&&onchg(d)};
+ if(d.t==='sel'||d.t==='zone'){
+  const opts=d.t==='zone'?[['','—'],...audit.zones.map(z=>[z.id,z.nom||'Zone'])]:[['','—'],...d.o.map(o=>[o,o])];
+  inp=h('select',{},opts.map(([val,lab])=>h('option',{value:val,selected:val===(v||'')},lab)));
+  inp.onchange=()=>{obj[d.k]=inp.value;if(d.onchg&&d.onchg(obj))onchg&&onchg(d,true);done()};
+ }else if(d.t==='area'){
+  inp=h('textarea',{rows:3},v||'');inp.oninput=()=>{obj[d.k]=inp.value;done()};
+  const w=h('div',{class:'mic'},inp);
+  if(SR){const b=h('button',{type:'button',title:'Dictée vocale'},'🎤');b.onclick=()=>{const r=new SR();r.lang='fr-FR';r.onresult=e=>{inp.value=(inp.value?inp.value+' ':'')+e.results[0][0].transcript;obj[d.k]=inp.value;persist()};r.onerror=()=>toast('Dictée indisponible');r.start();toast('🎤 Parlez…')};w.append(b)}
+  return h('label',{class:cls},h('span',{},d.l),w);
+ }else if(d.t==='chk'){
+  inp=h('input',{type:'checkbox',checked:!!v});inp.onchange=()=>{obj[d.k]=inp.checked;done()};
+  return h('label',{class:cls},inp,h('span',{},d.l));
+ }else{
+  inp=h('input',{type:d.t==='date'?'date':'text',inputmode:d.t==='num'?'decimal':null,value:v==null?'':v,list:d.list||null});
+  inp.oninput=()=>{obj[d.k]=inp.value;done()};
+ }
+ return h('label',{class:cls},h('span',{},d.l+(d.u?` (${d.u})`:'')),inp);
+}
+function formEl(fields,obj,upd){
+ const f=h('div',{class:'form'});
+ const build=()=>f.replaceChildren(...fields.filter(d=>!d.show||d.show(obj)).map(d=>fieldEl(d,obj,(dd,rebuild)=>{if(rebuild)build();upd&&upd()})));
+ build();return f;
+}
+
+/* ---------- photos ---------- */
+function shrink(file,max=1600,q=.82){return new Promise(res=>{const img=new Image();const u=URL.createObjectURL(file);
+ img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);c.toBlob(b=>{URL.revokeObjectURL(u);res(b||file)},'image/jpeg',q)};
+ img.onerror=()=>{URL.revokeObjectURL(u);res(file)};img.src=u})}
+async function addPhotos(files,ref,tag){let c=0;for(const f of files){const blob=await shrink(f);const p={id:uid(),auditId:audit.id,ref:ref||null,tag:tag||'Autre',cap:'',date:Date.now(),blob};await DB.put('photos',p);photos.push(p);c++}toast(`${c} photo${c>1?'s':''} enregistrée${c>1?'s':''}`)}
+function pick(capture,cb){const i=h('input',{type:'file',accept:'image/*'});if(capture)i.setAttribute('capture','environment');else i.multiple=true;i.onchange=async()=>{if(i.files.length)await cb([...i.files])};i.click()}
+const refOf=(sec,it)=>({sec,id:it.id,label:`${SEC[sec].one} : ${SEC[sec].title?SEC[sec].title(it):''}`});
+function photoBar(ref,tag,after){return h('div',{class:'row'},
+ h('button',{class:'btn',onclick:()=>pick(true,async fs=>{await addPhotos(fs,ref,tag);after()})},'📷 Photo'),
+ h('button',{class:'btn sec',onclick:()=>pick(false,async fs=>{await addPhotos(fs,ref,tag);after()})},'🖼️ Galerie'),
+ h('button',{class:'btn sec',onclick:()=>newSketch(ref,after)},'✏️ Croquis'))}
+function thumbGrid(list,after){return list.length?h('div',{class:'grid'},list.map(p=>h('img',{class:'thumb',src:urlOf(p),alt:p.cap||p.tag,onclick:()=>viewPhoto(p,after)}))):null}
+async function newSketch(ref,after){const c=document.createElement('canvas');c.width=1400;c.height=1000;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,1400,1000);
+ const b=await new Promise(r=>c.toBlob(r,'image/jpeg',.9));const out=await annotate(b);if(!out)return;
+ const p={id:uid(),auditId:audit.id,ref:ref||null,tag:'Croquis',cap:'Croquis',date:Date.now(),blob:out};await DB.put('photos',p);photos.push(p);toast('Croquis enregistré');after&&after()}
+function loadImg(b){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(b)})}
+async function annotate(blob){const img=await loadImg(blob);const W=img.width,H=img.height;
+ return new Promise(res=>{
+  const c=h('canvas',{width:W,height:H});const x=c.getContext('2d');let ops=[],cur=null,tool='pen',col='#ef4444';const lw=Math.max(4,W/220);
+  const drawOp=o=>{x.strokeStyle=x.fillStyle=o.c;x.lineWidth=lw;x.lineCap=x.lineJoin='round';x.beginPath();
+   if(o.t==='pen'){o.pts.forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.stroke()}
+   else if(o.t==='line'||o.t==='arrow'){x.moveTo(...o.a);x.lineTo(...o.b);x.stroke();if(o.t==='arrow'){const a=Math.atan2(o.b[1]-o.a[1],o.b[0]-o.a[0]),s=lw*5;x.beginPath();x.moveTo(...o.b);x.lineTo(o.b[0]-s*Math.cos(a-.4),o.b[1]-s*Math.sin(a-.4));x.lineTo(o.b[0]-s*Math.cos(a+.4),o.b[1]-s*Math.sin(a+.4));x.closePath();x.fill()}}
+   else if(o.t==='circle'){x.ellipse((o.a[0]+o.b[0])/2,(o.a[1]+o.b[1])/2,Math.abs(o.b[0]-o.a[0])/2||1,Math.abs(o.b[1]-o.a[1])/2||1,0,0,7);x.stroke()}
+   else if(o.t==='rect'){x.strokeRect(o.a[0],o.a[1],o.b[0]-o.a[0],o.b[1]-o.a[1])}
+   else if(o.t==='text'){x.font=`bold ${lw*8}px sans-serif`;x.lineWidth=lw*1.2;x.strokeStyle='#fff';x.strokeText(o.s,...o.a);x.fillText(o.s,...o.a)}};
+  const draw=()=>{x.drawImage(img,0,0,W,H);ops.concat(cur?[cur]:[]).forEach(drawOp)};
+  const pos=e=>{const r=c.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]};
+  c.onpointerdown=e=>{e.preventDefault();const p=pos(e);if(tool==='text'){const s=prompt('Texte :');if(s){ops.push({t:'text',c:col,a:p,s});draw()}return}c.setPointerCapture(e.pointerId);cur={t:tool,c:col,pts:[p],a:p,b:p}};
+  c.onpointermove=e=>{if(!cur)return;const p=pos(e);cur.b=p;if(cur.t==='pen')cur.pts.push(p);draw()};
+  c.onpointerup=()=>{if(cur){ops.push(cur);cur=null;draw()}};
+  const tb={};const tools=[['pen','✏️'],['arrow','➚'],['circle','◯'],['rect','▢'],['line','／'],['text','T']];
+  const setTool=t=>{tool=t;Object.entries(tb).forEach(([k,b])=>b.classList.toggle('on',k===t))};
+  const bar=h('div',{class:'bar'},tools.map(([t,l])=>tb[t]=h('button',{class:t==='pen'?'on':'',onclick:()=>setTool(t)},l)),
+   ['#ef4444','#facc15','#22c55e','#3b82f6','#000000','#ffffff'].map(k=>h('button',{class:'dot'+(k===col?' on':''),style:`background:${k}`,onclick:e=>{col=k;bar.querySelectorAll('.dot').forEach(d=>d.classList.remove('on'));e.currentTarget.classList.add('on')}})),
+   h('button',{onclick:()=>{ops.pop();draw()}},'↩'),h('span',{style:'flex:1'}),
+   h('button',{onclick:()=>{ov.remove();res(null)}},'Annuler'),
+   h('button',{class:'on',onclick:()=>{draw();c.toBlob(b=>{ov.remove();res(b)},'image/jpeg',.88)}},'Valider'));
+  const ov=h('div',{class:'ov'},bar,h('div',{class:'stage'},c));document.body.append(ov);draw()})}
+function viewPhoto(p,after){
+ const img=h('img',{class:'big',src:urlOf(p)});
+ const cap=h('input',{placeholder:'Légende…',value:p.cap||''});cap.oninput=()=>{p.cap=cap.value;DB.put('photos',p)};
+ const tag=h('select',{},TAGS.map(t=>h('option',{value:t,selected:t===p.tag},t)));tag.onchange=()=>{p.tag=tag.value;DB.put('photos',p)};
+ const close=()=>{ov.remove();after&&after()};
+ const ov=h('div',{class:'ov'},
+  h('div',{class:'bar'},h('button',{onclick:close},'← Retour'),h('span',{style:'flex:1'}),
+   h('button',{onclick:async()=>{const o=await annotate(p.blob);if(o){p.blob=o;await DB.put('photos',p);img.src=urlOf(p)}}},'✏️ Annoter'),
+   navigator.canShare?h('button',{onclick:()=>{const f=new File([p.blob],'photo.jpg',{type:'image/jpeg'});navigator.canShare({files:[f]})&&navigator.share({files:[f],title:p.cap||p.tag})}},'↗'):null,
+   h('button',{onclick:async()=>{if(confirm('Supprimer cette photo ?')){await DB.del('photos',p.id);photos=photos.filter(x=>x!==p);close()}}},'🗑️')),
+  h('div',{class:'stage'},img),
+  h('div',{class:'meta'},p.ref?h('small',{style:'color:#9ca3af'},'Lié à : '+p.ref.label):null,cap,tag));
+ document.body.append(ov)}
+
+/* ---------- vues ---------- */
+function topbar(title,back,right){return h('header',{class:'top'},back?h('button',{onclick:()=>history.back(),'aria-label':'Retour'},'←'):null,h('h1',{},title),right)}
+async function homeView(){
+ const list=(await DB.all('audits')).sort((a,b)=>(b.updated||0)-(a.updated||0));
+ const cards=list.length?list.map(a=>h('div',{class:'card tap',onclick:()=>openAudit(a.id)},h('h3',{},a.info.nom||'Audit sans nom'),h('div',{class:'sub'},[a.info.commune,a.info.type,a.info.date].filter(Boolean).join(' · ')),
+  h('div',{class:'sub'},`${a.zones.length} zones · ${a.env.length} parois · ${a.sys.length} équipements · ${a.reco.length} préconisations`))):[h('div',{class:'empty'},'Aucun audit pour l\'instant.',h('br'),'Créez votre premier audit pour commencer le relevé.')];
+ return[topbar('Audits énergétiques'),h('main',{},cards,
+  h('div',{class:'row'},h('button',{class:'btn sec',onclick:importBackup},'📥 Importer une sauvegarde')),
+  h('div',{class:'sub',style:'color:var(--mut);font-size:13px;margin-top:14px'},'Toutes les données restent sur cet appareil (hors-ligne). Pensez à exporter une sauvegarde après chaque visite.')),
+  h('button',{class:'btn fab',onclick:newAudit},'＋ Nouvel audit')]}
+async function newAudit(){const a={id:uid(),created:Date.now(),updated:Date.now(),info:{zc:'H3',date:new Date().toISOString().slice(0,10)},check:{},zones:[],env:[],sys:[],conso:[],mes:[],met:[],obs:[],reco:[]};await DB.put('audits',a);await openAudit(a.id)}
+async function openAudit(id){audit=await DB.get('audits',id);photos=await DB.photosOf(id);nav({v:'audit',tab:'info',sec:null,item:null})}
+function tabsEl(){const items=[['info','Général'],...ORDER.map(k=>[k,SEC[k].label]),['photos','Photos'],['bilan','Bilan']];
+ return h('div',{class:'tabs'},items.map(([k,l])=>h('button',{class:S.tab===k?'on':'',onclick:()=>nav({tab:k,sec:null,item:null},true)},l,SEC[k]?h('span',{class:'cnt'},audit[k].length):k==='photos'?h('span',{class:'cnt'},photos.length):null)))}
+function blankItem(k){const b={id:uid(),created:Date.now()};if(k==='env'||k==='met')b.nb='1';if(k==='sys')b.qte='1';if(k==='conso'){b.unite='kWh';b.coef='1'}if(k==='met')b.u='m²';return b}
+function listView(k){const sc=SEC[k];const items=audit[k];
+ const cards=items.length?items.map(it=>{const np=photos.filter(p=>p.ref&&p.ref.id===it.id).length;
+  return h('div',{class:'card tap',onclick:()=>nav({sec:k,item:it.id})},np?h('span',{class:'badge'},'📷 '+np):null,h('h3',{},sc.title(it)),h('div',{class:'sub'},sc.sub(it)||'—'),sc.txt(it)?h('div',{class:'val'},sc.txt(it)):null)}):[h('div',{class:'empty'},'Rien pour l\'instant.')];
+ return[h('main',{},cards),h('button',{class:'btn fab',onclick:()=>{const it=blankItem(k);audit[k].push(it);persist();nav({sec:k,item:it.id})}},'＋ '+sc.one)]}
+function editorView(){const k=S.sec,sc=SEC[k];const it=audit[k].find(x=>x.id===S.item);if(!it){history.back();return[]}
+ const calc=h('div',{class:'calc'});const upd=()=>{const t=sc.txt(it);calc.textContent=t;calc.style.display=t?'':'none'};
+ const strip=h('div');const ref=refOf(k,it);
+ const drawStrip=()=>{ref.label=refOf(k,it).label;strip.replaceChildren(photoBar(ref,null,drawStrip),thumbGrid(photos.filter(p=>p.ref&&p.ref.id===it.id),drawStrip)||'')};
+ drawStrip();upd();
+ const del=()=>{if(!confirm('Supprimer cet élément et ses photos liées ?'))return;audit[k]=audit[k].filter(x=>x!==it);photos.filter(p=>p.ref&&p.ref.id===it.id).forEach(p=>DB.del('photos',p.id));photos=photos.filter(p=>!(p.ref&&p.ref.id===it.id));persist();history.back()};
+ const dup=()=>{const c=JSON.parse(JSON.stringify(it));c.id=uid();c.created=Date.now();audit[k].push(c);persist();S={...S,item:c.id};history.replaceState({S},'');render();toast('Dupliqué')};
+ return[topbar(sc.title(it),true,h('button',{onclick:del,'aria-label':'Supprimer'},'🗑️')),h('main',{},formEl(sc.fields,it,upd),calc,h('h2',{class:'sec'},'Photos & croquis'),strip,
+  h('div',{class:'row'},h('button',{class:'btn sec',onclick:dup},'⧉ Dupliquer cet élément'),h('button',{class:'btn',onclick:()=>history.back()},'✔ Terminé')))]}
+function infoView(){
+ const f=formEl(INFO,audit.info);
+ const gps=h('button',{class:'btn sec',onclick:()=>navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>{audit.info.lat=p.coords.latitude.toFixed(6);audit.info.lon=p.coords.longitude.toFixed(6);persist();render();toast('Position enregistrée')},()=>toast('Position indisponible'),{enableHighAccuracy:true}):toast('GPS non disponible')},'📍 Relever ma position GPS');
+ const done=CHECK.filter((_,i)=>audit.check[i]).length;
+ const chk=CHECK.map((t,i)=>{const c=h('input',{type:'checkbox',checked:!!audit.check[i]});c.onchange=()=>{audit.check[i]=c.checked;persist()};return h('label',{class:'chk-l'},c,t)});
+ return[h('main',{},f,h('div',{class:'row'},gps),h('h2',{class:'sec'},`Check-list de visite (${done}/${CHECK.length})`),h('div',{class:'card'},chk))]}
+function photosView(){const box=h('div');let flt='Toutes';
+ const draw=()=>{const tags=['Toutes',...TAGS.filter(t=>photos.some(p=>p.tag===t))];const list=photos.filter(p=>flt==='Toutes'||p.tag===flt).sort((a,b)=>b.date-a.date);
+  box.replaceChildren(photoBar(null,'Autre',draw),h('div',{},tags.map(t=>h('span',{class:'tagpill'+(t===flt?' on':''),onclick:()=>{flt=t;draw()}},t))),thumbGrid(list,draw)||h('div',{class:'empty'},'Aucune photo.'))};
+ draw();return[h('main',{},box)]}
+function sumBy(arr,keyf,valf){const m={};arr.forEach(x=>{const k=keyf(x)||'—';m[k]=(m[k]||0)+valf(x)});return Object.entries(m)}
+function bilanView(){
+ const sZ=audit.zones.reduce((a,z)=>a+SEC.zones.calc(z).surf,0);const surf=n(audit.info.surf)||sZ;
+ const envT=sumBy(audit.env,e=>e.type,e=>SEC.env.calc(e).surf).filter(x=>x[1]>0);
+ const cons=sumBy(audit.conso,c=>c.energie,c=>SEC.conso.calc(c).kwh);const costs=Object.fromEntries(sumBy(audit.conso,c=>c.energie,c=>n(c.cout)));
+ const kwhT=cons.reduce((a,x)=>a+x[1],0),costT=Object.values(costs).reduce((a,x)=>a+x,0);
+ const rc=audit.reco.map(recoC);const coutT=audit.reco.reduce((a,r)=>a+n(r.cout),0),aidT=audit.reco.reduce((a,r)=>a+n(r.aides),0),gainT=audit.reco.reduce((a,r)=>a+n(r.gain),0),ecoT=rc.reduce((a,c)=>a+c.eco,0);
+ const tbl=(rows,h1,h2)=>rows.length?h('table',{class:'t'},rows.map(r=>h('tr',{},h('td',{},r[0]),h('td',{class:'r'},r[1])))):h('div',{class:'sub',style:'color:var(--mut)'},'—');
+ const kpi=(b,s)=>h('div',{},h('b',{},b),h('small',{},s));
+ const csvBtns=ORDER.map(k=>h('button',{class:'btn sec',onclick:()=>exportCSV(k)},SEC[k].ico+' '+SEC[k].label+' (CSV)'));
+ return[h('main',{},
+  h('div',{class:'kpi'},kpi(surf?f1(surf,0)+' m²':'—','Surface'),kpi(kwhT?f1(kwhT,0)+' kWh':'—','Énergie relevée (cumul)'),kpi(kwhT&&surf?f1(kwhT/surf,0)+' kWh/m²':'—','Ratio énergétique'),kpi(costT?f1(costT,0)+' €':'—','Coût énergie relevé'),
+   kpi(ecoT?f1(ecoT,0)+' €/an':'—','Économies potentielles'),kpi(gainT&&kwhT?f1(100*gainT/kwhT,0)+' %':'—','Gain / conso relevée')),
+  h('h2',{class:'sec'},'Surfaces d\'enveloppe (m² nets)'),h('div',{class:'card'},tbl(envT.map(([k,v])=>[k,f1(v)]))),
+  h('h2',{class:'sec'},'Consommations (kWh)'),h('div',{class:'card'},tbl(cons.map(([k,v])=>[k,f1(v,0)+' kWh'+(costs[k]?` · ${f1(costs[k],0)} €`:'')]))),
+  h('h2',{class:'sec'},'Programme de travaux'),h('div',{class:'card'},tbl([['Coût HT',f1(coutT,0)+' €'],['Aides',f1(aidT,0)+' €'],['Reste à charge',f1(coutT-aidT,0)+' €'],['TRI global',ecoT>0?f1((coutT-aidT)/ecoT,1)+' ans':'—']])),
+  h('h2',{class:'sec'},'Exports'),
+  h('div',{class:'row'},h('button',{class:'btn',onclick:exportReport},'📄 Rapport imprimable / PDF')),
+  h('div',{class:'row'},h('button',{class:'btn sec',onclick:exportJSON},'💾 Sauvegarde complète (JSON + photos)')),
+  h('div',{class:'row'},csvBtns),
+  h('h2',{class:'sec'},'Zone dangereuse'),h('div',{class:'row'},h('button',{class:'btn bad',onclick:delAudit},'Supprimer cet audit')))]}
+async function delAudit(){if(!confirm('Supprimer définitivement cet audit et toutes ses photos ?'))return;for(const p of photos)await DB.del('photos',p.id);await DB.del('audits',audit.id);audit=null;photos=[];nav({v:'home'})}
+
+/* ---------- exports ---------- */
+const cellVal=(d,v)=>d.t==='zone'?zoneName(v):d.t==='chk'?(v?'Oui':''):(v==null?'':v);
+function tableOf(k){const sc=SEC[k];const fs=sc.fields;const head=[...fs.map(d=>d.l+(d.u?` (${d.u})`:'')),...sc.cols.map(c=>c[0])];
+ const rows=audit[k].map(it=>[...fs.map(d=>cellVal(d,it[d.k])),...sc.cols.map(c=>c[1](it))]);return{head,rows}}
+function exportCSV(k){const{head,rows}=tableOf(k);const q=v=>'"'+String(typeof v==='number'?String(v).replace('.',','):v).replace(/"/g,'""')+'"';
+ const csv='\ufeff'+[head,...rows].map(r=>r.map(q).join(';')).join('\r\n');dl(`${slug(audit.info.nom)}_${k}.csv`,new Blob([csv],{type:'text/csv;charset=utf-8'}))}
+const slug=s=>(s||'audit').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'_').toLowerCase();
+async function exportJSON(){const ps=[];for(const p of photos)ps.push({...p,blob:await b2d(p.blob)});dl(`${slug(audit.info.nom)}_sauvegarde.json`,new Blob([JSON.stringify({v:1,audit,photos:ps})],{type:'application/json'}));toast('Sauvegarde exportée')}
+function importBackup(){const i=h('input',{type:'file',accept:'.json,application/json'});i.onchange=async()=>{try{const d=JSON.parse(await i.files[0].text());let a=d.audit;const ex=await DB.get('audits',a.id);const old=a.id;if(ex)a.id=uid();a.updated=Date.now();await DB.put('audits',a);for(const p of d.photos){p.blob=await (await fetch(p.blob)).blob();p.auditId=a.id;if(ex)p.id=uid();await DB.put('photos',p)}toast('Audit importé');render()}catch(e){toast('Fichier invalide')}};i.click()}
+async function exportReport(){
+ toast('Génération du rapport…');const i=audit.info;
+ const t=(head,rows)=>rows.length?`<table><tr>${head.map(x=>`<th>${esc(x)}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(x=>`<td>${esc(x)}</td>`).join('')}</tr>`).join('')}</table>`:'<p><i>Néant</i></p>';
+ const sec=(k,cols)=>{const sc=SEC[k];const rows=audit[k].map(it=>{const o={};sc.fields.forEach(d=>o[d.k]=cellVal(d,it[d.k]));sc.cols.forEach(c=>o['_'+c[0]]=c[1](it));return[...cols.map(c=>c.startsWith('_')?o[c]:o[c]),]});return rows};
+ const gen=(k,keys)=>{const sc=SEC[k];const labels=keys.map(x=>x.startsWith('_')?x.slice(1):sc.fields.find(d=>d.k===x).l);return t(labels,sec(k,keys))};
+ const ph=[];for(const p of photos.sort((a,b)=>a.date-b.date))ph.push(`<figure><img src="${await b2d(p.blob)}"><figcaption><b>${esc(p.tag)}</b>${p.cap?' – '+esc(p.cap):''}${p.ref?`<br><small>${esc(p.ref.label)}</small>`:''}</figcaption></figure>`);
+ const info=INFO.filter(d=>i[d.k]).map(d=>`<tr><th>${esc(d.l)}</th><td>${esc(i[d.k])}</td></tr>`).join('');
+ const html=`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Audit – ${esc(i.nom||'')}</title><style>body{font:13px/1.4 system-ui,sans-serif;margin:24px;color:#111}h1{font-size:22px;color:#0f766e}h2{font-size:16px;border-bottom:2px solid #0f766e;margin-top:24px;color:#0f766e}table{border-collapse:collapse;width:100%;margin:6px 0}th,td{border:1px solid #ccc;padding:4px 6px;text-align:left;vertical-align:top}th{background:#eef5f3}figure{display:inline-block;width:48%;margin:6px 1%;vertical-align:top;page-break-inside:avoid}figure img{width:100%}button{padding:10px 16px;font-size:15px}@media print{.np{display:none}}</style></head><body>
+ <p class="np"><button onclick="print()">🖨️ Imprimer / Enregistrer en PDF</button></p>
+ <h1>Audit énergétique – ${esc(i.nom||'')}</h1><table>${info}</table>
+ <h2>Zones</h2>${gen('zones',['nom','niveau','usage','L','l','h','_Surface (m²)','_Volume (m³)','occ','cons'])}
+ <h2>Enveloppe</h2>${gen('env',['type','zone','orient','_Surface nette (m²)','mat','iso','isoEp','vitr','menu','u','etat','notes'])}
+ <h2>Systèmes</h2>${gen('sys',['cat','des','energie','marque','modele','puis','qte','annee','etat','_Puissance totale (kW)','_Conso éclairage estimée (kWh/an)'])}
+ <h2>Consommations</h2>${gen('conso',['energie','cpt','debut','fin','unite','_kWh','cout'])}
+ <h2>Mesures</h2>${gen('mes',['g','zone','val','unit','app','notes'])}
+ <h2>Métrés</h2>${gen('met',['lib','cat','zone','u','nb','L','l','h','ded','_Quantité'])}
+ <h2>Observations</h2>${gen('obs',['type','zone','grav','desc','cause'])}
+ <h2>Préconisations</h2>${gen('reco',['titre','cat','prio','gain','prix','cout','aides','cee','_Économie (€/an)','_TRI (ans)'])}
+ <h2>Photos</h2>${ph.join('')||'<p><i>Aucune</i></p>'}</body></html>`;
+ const u=URL.createObjectURL(new Blob([html],{type:'text/html'}));const w=open(u,'_blank');if(!w)dl(`${slug(i.nom)}_rapport.html`,new Blob([html],{type:'text/html'}))}
+
+/* ---------- rendu ---------- */
+async function render(){
+ const app=$('#app');
+ if(S.v==='home'){await flush();audit=null;app.replaceChildren(...await homeView());return}
+ if(!audit){S={v:'home'};return render()}
+ if(S.item){app.replaceChildren(...editorView());return}
+ const title=audit.info.nom||'Audit sans nom';
+ const body=S.tab==='info'?infoView():SEC[S.tab]?listView(S.tab):S.tab==='photos'?photosView():bilanView();
+ app.replaceChildren(topbar(title,true),tabsEl(),...body);
+}
+(async()=>{await DB.open();if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+ const dl_=h('datalist',{id:'fiches'},FICHES.map(f=>h('option',{value:f})));document.body.append(dl_);
+ history.replaceState({S},'');render();
+ if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{})})();
+</script>
+</body>
+</html>
